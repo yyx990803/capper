@@ -20,4 +20,6 @@ The API is really simple:
     Capper.start()
     Capper.stop()
 
-Check `frames/` for your pngs.
+Check `frames/` for your pngs. You can use FFMPEG to convert the pngs into .mp4:
+
+    ffmpeg -r 60 -pattern_type glob -i '*.png' -c:v libx264 -pix_fmt yuv420p -b:v 4096k output.mp4
