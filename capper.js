@@ -101,7 +101,6 @@ var Capper = (function () {
 
         start     : start,
         stop      : stop,
-        sendFrame : sendFrame,
 
         init: function (opts) {
             if (initiated) return
