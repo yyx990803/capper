@@ -4,7 +4,7 @@ Export canvas animations to png frames.
 
 ## Usage
 
-1. You need to have Node.js v0.10+ installed.
+1. You need to have [Node.js](http://nodejs.org/) v0.10+ installed.
 2. Start the capture server with `node server.js`
 3. Include `capper.js` in the page the canvas is in.
 
