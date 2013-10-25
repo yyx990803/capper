@@ -21,6 +21,7 @@ http.createServer(function (req, res) {
         return res.end('ok')
     }
 
+    var s = Date.now()
     console.log('got frame')
     frameCount++
     if (frameCount === 0) return // somehow first frame is empty
@@ -30,7 +31,7 @@ http.createServer(function (req, res) {
     })
 
     writer.on('finish', function () {
-        console.log('saved frame ' + frameCount)
+        console.log('saved frame ' + frameCount + ' (' + (Date.now() - s) + 'ms)')
         res.end('ok')
     })
 
