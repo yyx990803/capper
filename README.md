@@ -8,17 +8,30 @@ Export canvas animations to png frames.
 2. Start the capture server with `node server.js`
 3. Include `capper.js` in the page the canvas is in.
 
-The API is really simple:
-    
-    // set the canvas with a selector string or the canvas element
-    Capper.initCanvas('#canvas')
+In your page you need to do a few things:
 
-    // If you want a button on the page:
-    Capper.initUI()
+``` js
+Capper.init({
+    canvas : '#canvas', // can be a selector or a node
+    ui     : true       // whether to show a record button
+})
 
-    // Or if you want to control it from javascript:
-    Capper.start()
-    Capper.stop()
+// wrap the raf, so we can skip it while recording
+Capper.wrapRAF(window.requestAnimationFrame)
+
+// wrap your main animation loop
+Capper.wrap(animate)
+
+// your animate loop probably should look like this,
+// in mose cases you don't have to modify anything inside.
+function animate () {
+    requestAnimationFrame(animate)
+    render()
+}
+```
+
+Now you can just click the record button to start/stop capturing frames. Or you can use `Capper.start()` and `Capper.stop()`.
+
 
 Check `frames/` for your pngs. You can use FFMPEG to convert the pngs into .mp4:
 

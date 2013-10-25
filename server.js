@@ -24,7 +24,9 @@ http.createServer(function (req, res) {
     var s = Date.now()
     console.log('got frame')
     frameCount++
-    if (frameCount === 0) return // somehow first frame is empty
+    if (frameCount === 0) {
+        return res.end('ok') // first frame can be empty
+    }
 
     var writer = fs.createWriteStream(path + '/' + pad(frameCount) + '.png', {
         encoding: 'base64'

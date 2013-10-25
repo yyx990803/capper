@@ -1,8 +1,10 @@
 var Capper = (function () {
     
-    var capping  = false,
-        uiInited = false,
-        canvas   = null,
+    var capping   = false,
+        pinging   = false,
+        uiInited  = false,
+        initiated = false,
+        canvas    = null,
         el,
         dot
 
@@ -15,11 +17,13 @@ var Capper = (function () {
     }
 
     function start () {
-        if (!canvas) return
+        if (!canvas || pinging || capping) return
+        pinging = true
         pingServer(function () {
             capping = true
+            pinging = false
             if (uiInited) dot.style.backgroundColor = '#F44'
-            sendFrame()
+            // sendFrame()
         })
     }
 
@@ -36,15 +40,15 @@ var Capper = (function () {
         xhr.onerror = onError
     }
 
-    function sendFrame () {
-        if (!capping) return
-        requestAnimationFrame(sendFrame)
+    function sendFrame (cb) {
+        if (!capping || !canvas) return
         console.log('sending frame')
         var url = canvas.toDataURL("image/png"),
             xhr = new XMLHttpRequest()
         xhr.open('POST', 'http://localhost:7777', true)
         xhr.send(url.slice(22))
         xhr.onerror = onError
+        if (cb) xhr.onload = cb
     }
 
     function onError () {
@@ -58,53 +62,75 @@ var Capper = (function () {
         }
     }
 
-    return {
+    function initUI () {
 
-        start : start,
-        stop  : stop,
+        if (uiInited) return
+        uiInited = true
 
-        initCanvas: function (c) {
-            canvas = typeof c === 'string'
+        el = document.createElement('div')
+        dot = document.createElement('div')
+
+        applyStyle(el, {
+            position: 'absolute',
+            bottom: '14px',
+            right: '14px',
+            width: '50px',
+            height: '50px',
+            borderRadius: '4px',
+            backgroundColor: '#eee',
+            cursor: 'pointer',
+            border: '1px solid #ccc'
+        })
+
+        applyStyle(dot, {
+            width: '24px',
+            height: '24px',
+            margin: '13px',
+            backgroundColor: '#777',
+            borderRadius: '100%',
+            transition: 'background-color .25s ease',
+            boxShadow: '0 1px 8px rgba(0,0,0,.3)'
+        })
+
+        el.addEventListener('click', toggle)
+        el.appendChild(dot)
+        document.body.appendChild(el)
+    }
+
+    var api = {
+
+        start     : start,
+        stop      : stop,
+        sendFrame : sendFrame,
+
+        init: function (opts) {
+            if (initiated) return
+            // set canvas
+            var c = opts.canvas
+            if (!c) throw new Error('Capper: you need to give me a canvas.')
+
+            canvas = canvas = typeof c === 'string'
                 ? document.querySelector(c)
                 : c
-            return this
+
+            if (opts.ui) initUI()
+            initiated = true
         },
 
-        initUI: function () {
+        wrap: function (loop) {
+            return function go () {
+                loop()
+                sendFrame(go)
+            }
+        },
 
-            if (uiInited) return
-            uiInited = true
-
-            el = document.createElement('div')
-            dot = document.createElement('div')
-
-            applyStyle(el, {
-                position: 'absolute',
-                bottom: '14px',
-                right: '14px',
-                width: '50px',
-                height: '50px',
-                borderRadius: '4px',
-                backgroundColor: '#eee',
-                cursor: 'pointer',
-                border: '1px solid #ccc'
-            })
-
-            applyStyle(dot, {
-                width: '24px',
-                height: '24px',
-                margin: '13px',
-                backgroundColor: '#777',
-                borderRadius: '100%',
-                transition: 'background-color .25s ease',
-                boxShadow: '0 1px 8px rgba(0,0,0,.3)'
-            })
-
-            el.addEventListener('click', toggle)
-            el.appendChild(dot)
-            document.body.appendChild(el)
-            return this
+        wrapRAF: function (raf) {
+            return function (fn) {
+                if (!capping) raf(fn)
+            }
         }
     }
+
+    return api
 
 })()
